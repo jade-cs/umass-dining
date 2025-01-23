@@ -6,4 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v29
-      - run: nix build .#umass-dining
+      - name: Check flake outputs
+        run: nix flake check
+      - name: Build program 
+        run: nix build .#umass-dining
