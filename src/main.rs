@@ -150,7 +150,7 @@ async fn list_dining_halls(state: &rocket::State<SharedState>) -> Json<Vec<Strin
     Json(hall_names.clone())
 }
 
-#[get("/<name>")]
+#[get("/info?<name>")]
 async fn get_info(
     state: &rocket::State<SharedState>,
     name: &str,
