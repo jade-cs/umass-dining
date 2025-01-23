@@ -26,8 +26,8 @@
         buildInputs = [ ];
       in
       rec {
-        defaultPackage = umass-dining;
-        umass-dining = naersk'.buildPackage {
+        defaultPackage = packages.umass-dining;
+        packages.umass-dining = naersk'.buildPackage {
           inherit nativeBuildInputs buildInputs;
           src = ./.;
         };
