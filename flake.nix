@@ -44,28 +44,36 @@
         }) // {
       nixosModules.default = { config, pkgs, lib, ... }:
         {
-          # Define the custom option
-          options.services.umass-dining = lib.mkenableOption "UMass Dining service";
+          options.services.umass-dining = with lib; {
+            enable = mkEnableOption "UMass Dining service";
+            port = mkOption {
+              type = types.port;
+              default = 9999;
+              description = "Port to listen on";
+            };
+            address = mkOption {
+              type = types.str;
+              default = "127.0.0.1";
+              description = "Address to bind to";
+            };
+          };
 
-          # Conditionally enable the service if the option is true
           config = lib.mkIf config.services.umass-dining.enable {
             systemd.services.umass-dining = {
               enable = true;
               description = "UMass Dining Service";
 
-              # Command to start the service
               serviceConfig =
                 let
+                  cfg = config.services.umass-dining;
                   umass-dining = self.packages.${config.nixpkgs.system}.umass-dining;
                 in
                 {
-                  ExecStart = "${umass-dining}/bin/umass-dining"; # Replace with your binary path
+                  ExecStart = "${umass-dining}/bin/umass-dining --port ${toString cfg.port} --ip ${cfg.address}";
                   Restart = "always";
                   RestartSec = "5s";
-                  Environment = "PORT=8000"; # Example environment variables
                 };
 
-              # Add dependencies and target
               wantedBy = [ "multi-user.target" ];
             };
           };

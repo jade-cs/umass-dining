@@ -1,3 +1,4 @@
+use clap::Parser;
 use rocket::http::Status;
 use rocket::serde::json::{Json, Value};
 use rocket::serde::{Deserialize, Deserializer, Serialize};
@@ -192,8 +193,23 @@ async fn fetch_dining_hall_data(state: SharedState) {
     }
 }
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// IP address to bind to
+    #[arg(long, default_value = "127.0.0.1")]
+    ip: String,
+
+    /// Port to bind to
+    #[arg(long, default_value_t = 9999)]
+    port: u16,
+}
+
 #[tokio::main]
 async fn main() {
+    // Parse CLI args
+    let args = Args::parse();
+    // Set up shared state
     let state: SharedState = Arc::new(RwLock::new(HashMap::new()));
     let data_state = Arc::clone(&state);
 
@@ -203,13 +219,14 @@ async fn main() {
     });
 
     // Launch the Rocket server
-    rocket::build()
-        .manage(state)
-        .mount("/", routes![list_dining_halls, get_info])
-        .ignite()
-        .await
-        .expect("Failed to ignite Rocket server")
-        .launch()
-        .await
-        .expect("Failed to launch Rocket server");
+    rocket::custom(
+        rocket::Config::figment()
+            .merge(("address", args.ip))
+            .merge(("port", args.port)),
+    )
+    .manage(state)
+    .mount("/", routes![get_info, list_dining_halls])
+    .launch()
+    .await
+    .unwrap();
 }
